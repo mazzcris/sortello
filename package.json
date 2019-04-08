@@ -12,11 +12,11 @@
   },
   "scripts": {
     "start": "webpack-dev-server --host sortello.ideato.it --https --progress --inline --hot --port 4000",
+    "test": "npm run protractor && npm run protractor-integration && npm run unit",
     "dev": "webpack-dev-server --progress --inline --hot --port 4000",
     "build": "npm test && npm run clean && npm run build:bundle",
     "clean": "rimraf build",
     "build:bundle": "webpack -p",
-    "test": "npm run protractor && npm run protractor-integration && npm run unit",
     "unit": "jest --verbose",
     "webdriver-update": "./node_modules/protractor/bin/webdriver-manager update",
     "protractor": "./node_modules/protractor/bin/protractor protractor.conf.js --suite=single",

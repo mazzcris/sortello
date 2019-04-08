@@ -1,55 +1,110 @@
 import React from "react"
-import ApiKey from "./components/ApiKey.jsx"
+import Authentication from "./components/Authentication.jsx"
 import ColumnSelection from "./components/ColumnSelection.jsx"
 import Choices from "./components/Choices.jsx"
 import ChoicesVoter from "./components/ChoicesVoter.jsx"
 import Results from "./components/Results.jsx"
 import treeNodeFactory from "./model/treeNodeFactory"
 import queryString from "query-string"
+import TrelloApi from "./api/TrelloApi"
+import GithubApi from "./api/GithubApi"
+
+const AUTHENTICATION_FORM = 1;
+const COLUMN_SELECT = 2;
+const CHOICES = 3;
+const SEND_DATA_TO_SERVER = 4;
+const CHOICES_VOTER = 5;
 
 class App extends React.Component {
-    constructor (props) {
+    constructor(props) {
         super(props)
         this.state = {
-            Trello: Trello,
+            BoardApi: new TrelloApi(),
             nodes: Array(),
             rootNode: null,
-            currentView: 1,
-            startTimeStamp: null,// 1-ApiKey 2-ColumnSelect 3-Choices 4-SendDataToServer
-            boardId: null
+            currentView: AUTHENTICATION_FORM,
+            startTimeStamp: null,// 1-Authentication 2-ColumnSelect 3-Choices 4-SendDataToServer
+            boardId: null,
+            fromExtension: null,
+            extId: null
         };
-        this.getCurrentView = this.getCurrentView.bind(this)
-        this.setStartTimeStamp = this.setStartTimeStamp.bind(this)
-        this.setSortedRootNode = this.setSortedRootNode.bind(this)
-        this.setSortedRootNode = this.setSortedRootNode.bind(this)
-        this.handleCards = this.handleCards.bind(this)
-        this.handleAuthentication = this.handleAuthentication.bind(this)
-        this.componentDidMount = this.componentDidMount.bind(this)
+        this.getCurrentView = this.getCurrentView.bind(this);
+        this.setStartTimeStamp = this.setStartTimeStamp.bind(this);
+        this.setSortedRootNode = this.setSortedRootNode.bind(this);
+        this.setSortedRootNode = this.setSortedRootNode.bind(this);
+        this.handleCards = this.handleCards.bind(this);
+        this.handleAuthentication = this.handleAuthentication.bind(this);
+        this.componentDidMount = this.componentDidMount.bind(this);
     }
 
-    componentDidMount () {
+    componentDidMount() {
         jQuery('.choice_button .card_link').click(function (e) {
             e.stopPropagation();
         });
+        const params = queryString.parse(location.search);
+        if (params.extId !== undefined) {
+            this.setState({
+                BoardApi: params.fw === 'g' ? new GithubApi() : new TrelloApi(),
+                fromExtension: params.fw === 'g' ? "Github" : "Trello",
+                extId: params.extId
+            }, function () {
+                localStorage.setItem('extId', this.state.extId);
+                localStorage.setItem('fromExtension', this.state.fromExtension);
+                if (this.checkTokenGithubDefined()) {
+                    this.handleAuthentication()
+                }
+            })
+        }
 
+        if (this.codeIsNotSaved()) {
+            let code = window.location.href.match(/\?code=(.*)/)[1];
+            this.setState({
+                fromExtension: localStorage.getItem("fromExtension"),
+                extId: localStorage.getItem("extId"),
+                BoardApi: new GithubApi()
+            }, function () {
+                localStorage.setItem("code", code);
+                history.pushState(null, null, '/app.html?extId=' + this.state.extId + "&fw=g");
+                this.state.BoardApi.authenticate(this.handleAuthentication)
+            })
+        }
+
+        if (this.checkOutdatedVersion()) {
+            alert("Looks like you are using and outdated version of the Sortello Chrome Extension, please update.Thank you!");
+        }
     }
 
-    handleAuthentication () {
+    checkTokenGithubDefined() {
+        return localStorage.getItem("token") !== undefined && localStorage.getItem("token") !== null
+            && this.state.BoardApi.getName() === "Github"
+    }
+
+    codeIsNotSaved() {
+        const params = queryString.parse(location.search);
+        return params.code !== undefined && !localStorage.getItem("code")
+    }
+
+    checkOutdatedVersion() {
+        const params = queryString.parse(location.search);
+        return params.boardId !== undefined && params.listName !== undefined
+    }
+
+    handleAuthentication() {
         const params = queryString.parse(location.search);
         if (params.roomKey !== undefined) {
             this.setState({
                 rootNode: [],
                 nodes: [],
-                currentView: 5
+                currentView: CHOICES_VOTER
             })
         } else {
             this.setState({
-                currentView: 2
+                currentView: COLUMN_SELECT
             });
         }
     }
 
-    handleCards (listCards, boardId) {
+    handleCards(listCards, boardId) {
         let that = this;
         let nodes = [];
         for (let i = 0; i < listCards.length; i++) {
@@ -60,36 +115,39 @@ class App extends React.Component {
             boardId: boardId,
             rootNode: nodes.shift(),
             nodes: nodes,
-            currentView: 3
+            currentView: CHOICES
         }, function () {
             that.refs.choices.startChoices();
         })
     }
 
-    setSortedRootNode (rootNode) {
+    setSortedRootNode(rootNode) {
         this.setState({
             rootNode: rootNode,
-            currentView: 4
+            currentView: SEND_DATA_TO_SERVER
         })
     }
 
-    setStartTimeStamp (timeStamp) {
+    setStartTimeStamp(timeStamp) {
         this.setState({
             startTimeStamp: timeStamp
         })
     }
 
-    renderApiKeyForm () {
-        return <ApiKey Trello={this.state.Trello} onAuthentication={this.handleAuthentication}/>
+    renderAuthenticationForm() {
+        return <Authentication BoardApi={this.state.BoardApi} onAuthentication={this.handleAuthentication}
+                               fromExtension={this.state.fromExtension}/>
     }
 
-    renderColumnSelection () {
-        return <ColumnSelection Trello={this.state.Trello} handleCards={this.handleCards}/>
+    renderColumnSelection() {
+        return <ColumnSelection BoardApi={this.state.BoardApi} handleCards={this.handleCards}
+                                fromExtension={this.state.fromExtension}
+                                extId={this.state.extId}/>
     }
 
-    renderChoicesVoter () {
+    renderChoicesVoter() {
         return (
-            <ChoicesVoter Trello={this.state.Trello}
+            <ChoicesVoter BoardApi={this.state.BoardApi}
                           ref="choicesVoter" setSortedRootNode={this.setSortedRootNode}
                           setStartTimeStamp={this.setStartTimeStamp}
                           nodes={this.state.nodes}
@@ -97,9 +155,9 @@ class App extends React.Component {
         )
     }
 
-    renderChoices () {
+    renderChoices() {
         return (
-            <Choices Trello={this.state.Trello}
+            <Choices BoardApi={this.state.BoardApi}
                      ref="choices" setSortedRootNode={this.setSortedRootNode}
                      setStartTimeStamp={this.setStartTimeStamp}
                      nodes={this.state.nodes}
@@ -108,35 +166,36 @@ class App extends React.Component {
         )
     }
 
-    renderResults () {
+    renderResults() {
         return (
-            <Results rootNode={this.state.rootNode} Trello={this.state.Trello}
-                     startTimeStamp={this.state.startTimeStamp}/>
+            <Results rootNode={this.state.rootNode} BoardApi={this.state.BoardApi}
+                     startTimeStamp={this.state.startTimeStamp} fromExtension={this.state.fromExtension}
+                     extId={this.state.extId}/>
         )
     }
 
-    renderError(){
+    renderError() {
         return <h3>Error</h3>
     }
 
-    getCurrentView () {
+    getCurrentView() {
         switch (this.state.currentView) {
-            case 1:
-                return this.renderApiKeyForm()
-            case 2:
+            case AUTHENTICATION_FORM:
+                return this.renderAuthenticationForm()
+            case COLUMN_SELECT:
                 return this.renderColumnSelection()
-            case 3:
+            case CHOICES:
                 return this.renderChoices()
-            case 4:
+            case SEND_DATA_TO_SERVER:
                 return this.renderResults()
-            case 5:
+            case CHOICES_VOTER:
                 return this.renderChoicesVoter()
             default:
                 return this.renderError()
         }
     }
 
-    render () {
+    render() {
         return (
             <div id="container_div">
                 {this.getCurrentView()}

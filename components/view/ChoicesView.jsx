@@ -77,8 +77,10 @@ class ChoicesView extends React.Component {
                             </div>
                         </div>
                     </div>
-                    {this.printCard('left_button', 'node', this.props.leftCard.value, this.props.voters.left)}
-                    {this.printCard('right_button', 'compareNode', this.props.rightCard.value, this.props.voters.right)}
+                    {this.printCard('left_button', 'node', this.props.leftCard.value,
+                        this.props.voters? this.props.voters.left : null)}
+                    {this.printCard('right_button', 'compareNode', this.props.rightCard.value,
+                        this.props.voters? this.props.voters.right : null)}
                     {/*<TreeDraw tree={this.state.rootNode}></TreeDraw>*/}
                     
                     <div className="container__actions-bar">
@@ -107,8 +109,6 @@ class ChoicesView extends React.Component {
                         {this.props.roomLink}
                     </div>
                 </div>
-                
-                
             </div>
         )
     }

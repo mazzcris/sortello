@@ -4,7 +4,6 @@ import Header from './Header.jsx';
 import BoardSelector from './BoardSelector.jsx'
 import ListSelector from './ListSelector.jsx'
 import LabelSelector from './LabelSelector.jsx'
-import queryString from "query-string";
 import Footer from "./Footer.jsx"
 
 class ColumnSelection extends React.Component {
@@ -17,7 +16,6 @@ class ColumnSelection extends React.Component {
             groupedboards: [],
             organizations: [],
             noCardsError: false,
-            fromExtension: false,
             boardId: null
         }
         this.getBoardColumns = this.getBoardColumns.bind(this);
@@ -28,34 +26,31 @@ class ColumnSelection extends React.Component {
         this.getBoards = this.getBoards.bind(this);
     }
 
-    componentDidMount() {
-        let component = this;
-        const params = queryString.parse(location.search);
-
-        if (params.boardId !== undefined && params.listName !== undefined) {
-            alert("Looks like you are using and outdated version of the Sortello Chrome Extension, please update. Thank you!");
-        }
-
-        if (params.extId !== undefined) {
-            component.setState({ fromExtension: true });
-            component.props.Trello.cards.get(this.cleanForFirefoxAddon(params.extId), null, function (card) {
-                component.retrieveCardsByListId(card.idList)
-            });
+    componentDidMount () {
+        let component = this
+        let BoardApi = this.props.BoardApi
+        localStorage.removeItem("extId");
+        localStorage.removeItem("fromExtension");
+        if (component.props.fromExtension !== null) {
+            if (component.props.BoardApi.getName() !== "Github") {
+                BoardApi.getCardById(component.props.extId, null, function (card) {
+                    component.retrieveCardsByListId(card.idList)
+                })
+            } else {
+                component.retrieveCardsByListId(component.props.extId)
+            }
         }
 
         if (this.state.organizations.length > 0) {
             return;
         }
-        this.getBoards(Trello)
+        this.getBoards()
     }
 
-    cleanForFirefoxAddon(str) {
-        return str.replace('#', '');
-    }
-
-    getBoards(Trello) {
+    getBoards () {
         let component = this
-        Trello.members.get('me', {
+        let BoardApi = this.props.BoardApi
+        BoardApi.getMembers('me', {
             organizations: "all",
             organization_fields: "all",
             boards: "open",
@@ -106,8 +101,9 @@ class ColumnSelection extends React.Component {
     retrieveCardsByListId(listId) {
         let that = this;
         let labels = [];
-        this.props.Trello.lists.get(listId, { cards: "open" }, function (data) {
-            let listCards = data.cards;
+        let BoardApi = this.props.BoardApi
+        BoardApi.getCardsByListId(listId, {cards: "open"}, function (data) {
+            let listCards = data;
             that.setState({
                 listCards: listCards
             });
@@ -175,16 +171,16 @@ class ColumnSelection extends React.Component {
         }
     }
 
-    renderBoardSelector() {
-        if (this.state.fromExtension === true) {
+    renderBoardSelector () {
+        if (this.props.fromExtension !== null) {
             return ""
         }
         return <BoardSelector groupedboards={this.state.groupedboards}
             onChange={this.handleBoardClicked} />
     }
 
-    renderListSelector() {
-        if (this.state.lists.length === 0 || this.state.fromExtension === true) {
+    renderListSelector () {
+        if (this.state.lists.length === 0 || this.props.fromExtension !== null) {
             return ""
         }
         return <p><ListSelector lists={this.state.lists}
@@ -205,7 +201,7 @@ class ColumnSelection extends React.Component {
                     <div className="selection__container selection__container--animation">
                         <div className="select-list--text-container selection__heading">
                             {
-                                (this.state.fromExtension === true) ?
+                                (this.props.fromExtension !== null) ?
                                     "Filter by label, or select All" :
                                     "First of all, select the board you want to prioritize"
                             }

@@ -8,24 +8,20 @@ import ChoicesView from './view/ChoicesView.jsx'
 import AccessdeniedAnimation from './AccessdeniedAnimation.jsx';
 
 
-let socket = false;
-if (typeof socketAddress !== 'undefined') {
-    if (socketAddress !== null) {
-        socket = io(socketAddress);
-    }
-}
+
 
 const params = queryString.parse(location.search);
 
 class Choices extends React.Component {
-    constructor (props) {
+    constructor(props) {
         super(props);
         let component = this
         this.handleCardClicked = this.handleCardClicked.bind(this)
-        this.Trello = this.props.Trello
+        this.BoardApi = this.props.BoardApi
         this.renderForbidden = this.renderForbidden.bind(this)
         this.renderLoading = this.renderLoading.bind(this)
         this.room = false;
+        this.socket = false;
         this.state = {
             leftCard: null,
             rightCard: null,
@@ -39,13 +35,21 @@ class Choices extends React.Component {
         if (params.roomKey !== undefined) {
             this.setUpRoom(component);
         }
-        if (socket) {
+        if (this.socket) {
             this.setUpSocket(component);
         }
     }
 
-    setUpSocket (component) {
-        socket.on('votesInfo', function (leftVoters, rightVoters) {
+    componentDidMount () {
+        if (typeof socketAddress !== 'undefined') {
+            if (socketAddress !== null) {
+                this.socket = io(socketAddress);
+            }
+        }
+    }
+
+    setUpSocket(component) {
+        this.socket.on('votesInfo', function (leftVoters, rightVoters) {
             component.setState({
                 voters: {
                     left: leftVoters,
@@ -54,8 +58,8 @@ class Choices extends React.Component {
             })
         })
 
-        socket.on('castBoardIdToVoters', function (boardId) {
-            component.Trello.boards.get(boardId, function () {
+        this.socket.on('castBoardIdToVoters', function (boardId) {
+            component.BoardApi.getBoard(boardId, function () {
                 component.setState({
                     hasBoardPermissions: true
                 })
@@ -68,7 +72,7 @@ class Choices extends React.Component {
             })
         })
 
-        socket.on('nextChoice', function (leftCard, rightCard) {
+        this.socket.on('nextChoice', function (leftCard, rightCard) {
             component.setState({
                 leftCard: leftCard,
                 rightCard: rightCard,
@@ -77,25 +81,25 @@ class Choices extends React.Component {
             })
         })
 
-        socket.on('roomVotersUpdated', function (roomVoters) {
+        this.socket.on('roomVotersUpdated', function (roomVoters) {
             component.setState({
                 roomVoters: roomVoters
             })
         })
 
-        socket.on('prioritizationEnded', function () {
+        this.socket.on('prioritizationEnded', function () {
             component.setState({
                 ended: true
             })
         })
     }
 
-    setUpRoom (component) {
+    setUpRoom(component) {
         component.state.roomId = params.roomKey
-        if (socket) {
-            component.room = new Room(socket, params.roomKey);
-            socket.on('connect', function () {
-                component.props.Trello.members.get('me', {}, function (data) {
+        if (this.socket) {
+            component.room = new Room(this.socket, params.roomKey);
+            this.socket.on('connect', function () {
+                component.BoardApi.getMembers('me', {}, function (data) {
                     component.trelloId = data.id
                     component.trelloAvatar = '//trello-avatars.s3.amazonaws.com/' + data.avatarHash + '/50.png'
                     if (data.avatarHash === null) {
@@ -116,7 +120,7 @@ class Choices extends React.Component {
         }
     }
 
-    handleCardClicked (side) {
+    handleCardClicked(side) {
         if (!this.state.hasVoted && this.room) {
             this.room.castCardClicked(side, this.trelloId, this.trelloAvatar)
         }
@@ -136,11 +140,11 @@ class Choices extends React.Component {
                 </div>
     }
 
-    renderLoading () {
+    renderLoading() {
         return (<span>Loading...</span>);
     }
 
-    render () {
+    render() {
         if (!this.state.hasBoardPermissions) {
             return this.renderForbidden()
         }
@@ -155,7 +159,7 @@ class Choices extends React.Component {
                 roomVoters={this.state.roomVoters}
                 leftCard={this.state.leftCard}
                 rightCard={this.state.rightCard}
-                everybodyVoted={this.state.voters.left.length + this.state.voters.right.length > 0}
+                everybodyVoted={this.room.voters.left.length + this.room.voters.right.length > 0}
                 voters={this.state.voters}
                 handleAddToBlacklist={null}
                 handleCardClicked={this.handleCardClicked}

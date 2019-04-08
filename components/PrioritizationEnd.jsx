@@ -1,8 +1,6 @@
 import React from "react"
 import SuccessAnimation from './SuccessAnimation.jsx';
 
-
-
 export default () => {
   return (
     <div className="prioritization-end__container">
@@ -22,8 +20,5 @@ or open a new room and restart prioritizing. </div>
                 </a>
         </div>
       </div>
-    
-    
   )
-  
 }

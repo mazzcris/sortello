@@ -4,7 +4,6 @@
     align-items: center;
 }
 
-
 .send-success__heading {
     margin: 16px 0 32px;
     font-size: 24px;
@@ -13,19 +12,22 @@
     width: 100%;
     color: #4A4A4A;
 }
+
 .success-buttons__container {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
+
 .prioritize-again__button {
     min-width: 480px;
 }
 
-.check-trello__button {
+.check-sortello__button {
     min-width: 480px;
 }
-.check-trello__button:focus {
+
+.check-sortello__button:focus {
     color: #4A4A4A;
     text-decoration: none;
 }
@@ -34,35 +36,36 @@
     text-decoration: none;
 }
 
-.check-trello__button:hover {
+.check-sortello__button:hover {
     text-decoration: none;
 }
 
 .success-animation__stroke-secondary {
-    fill:none;
-    stroke:#4A90E2;
-    stroke-width:3;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-    stroke-miterlimit:10;
+    fill: none;
+    stroke: #4A90E2;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-miterlimit: 10;
     stroke-dasharray: 1000;
     stroke-dashoffset: 1000;
     animation: dash 2.5s ease-in-out forwards;
 }
+
 .success-animation__stroke-main {
-    fill:none;
-    stroke:#4A90E2;
-    stroke-width:4;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-    stroke-miterlimit:10;
+    fill: none;
+    stroke: #4A90E2;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-miterlimit: 10;
     stroke-dasharray: 1000;
     stroke-dashoffset: 1000;
     animation: dash 2.5s ease-in-out forwards;
 }
 
 .send-success__svg {
-    enable-background:new 0 0 100 100;
+    enable-background: new 0 0 100 100;
 }
 
 @keyframes dash {

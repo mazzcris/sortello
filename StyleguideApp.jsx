@@ -4,6 +4,8 @@ import ChoicesView from "./components/view/ChoicesView.jsx"
 import ChoicesVoter from "./components/ChoicesVoter.jsx"
 import loremIpsum from 'lorem-ipsum'
 import RoomLink from './components/RoomLink.jsx'
+import SendToBottomButton from "./components/SendToBottomButton.jsx";
+import Authentication from "./components/Authentication.jsx";
 
 const randomColor = () => {
     return ['red', 'green', 'blue', 'yellow'][randInt(0, 3)]
@@ -55,9 +57,13 @@ const roomVoters = [
     {trelloAvatar: '//www.gravatar.com/avatar/94d093eda664addd6e450d7ew831bcad?s=32&d=identicon&r=PG', isAdmin:true}
 ]
 
+const trelloApi = {authenticate: () => {},
+                    getName: () => {return "trello"}};
+
 class StyleguideApp extends React.Component {
     constructor (props) {
         super(props)
+
     }
 
     renderRoomLink () {
@@ -122,6 +128,13 @@ class StyleguideApp extends React.Component {
                 <hr/>
                 <h2>No board permissions message</h2>
                 <ChoicesVoter/>
+                <hr/>
+                <h2>Bottone</h2>
+                <SendToBottomButton forget = {() => {}}
+                                    cardId = {null}/>
+                <h2> View for Authentication </h2>
+                <Authentication BoardApi ={trelloApi}/>
+                <hr/>
             </div>
         )
     }

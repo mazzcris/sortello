@@ -2,3 +2,4 @@ const trelloApiKey = null;
 const gaTrackingId = null;
 const showCookieBanner = false;
 const socketAddress = null
+const clientId = null
