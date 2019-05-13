@@ -8,7 +8,7 @@ class Card extends React.Component {
         let cardButtons =
             <CardButtons everybodyVoted={this.props.everybodyVoted}
                          handleGoToNextVoting={this.props.handleGoToNextVoting}
-                         side={this.props.side} data={this.props.data} forget={this.props.forget}/>
+                         side={this.props.side} data={this.props.data} forget={this.props.forget}/>;
         return (
             <div className={"wrapper__card choices--button"} id={this.props.id}>
                 <div className={"container__card " + (this.props.selected ? "container__card-selected" : "")}
@@ -17,7 +17,7 @@ class Card extends React.Component {
                      }
                      } data-cardId="0">
                     <CardLabels labels={this.props.data.labels}/>
-                    <div className={'label__separator'}></div>
+                    <div className={'label__separator'}/>
                     <div className="card__title">{this.props.data.name}</div>
                     {this.props.everybodyVoted ? <CardVoters voters={this.props.voters}/> : null}
                 </div>

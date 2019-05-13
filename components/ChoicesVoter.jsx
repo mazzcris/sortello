@@ -1,11 +1,11 @@
 import React from 'react';
-import {clone} from 'lodash'
 import io from 'socket.io-client';
-import queryString from 'query-string';
 import PrioritizationEnd from './PrioritizationEnd.jsx'
 import Room from '../model/Room.js'
 import ChoicesView from './view/ChoicesView.jsx'
-import AccessdeniedAnimation from './AccessdeniedAnimation.jsx';
+import ErrorBoard from './ErrorBoard.jsx';
+import Loader from './Loader.jsx';
+import queryString from "query-string";
 
 
 let socket = false;
@@ -18,13 +18,13 @@ if (typeof socketAddress !== 'undefined') {
 const params = queryString.parse(location.search);
 
 class Choices extends React.Component {
-    constructor (props) {
+    constructor(props) {
         super(props);
-        let component = this
-        this.handleCardClicked = this.handleCardClicked.bind(this)
-        this.Trello = this.props.Trello
-        this.renderForbidden = this.renderForbidden.bind(this)
-        this.renderLoading = this.renderLoading.bind(this)
+        let component = this;
+        this.handleCardClicked = this.handleCardClicked.bind(this);
+        this.renderForbidden = this.renderForbidden.bind(this);
+        this.renderLoading = this.renderLoading.bind(this);
+        this.BoardApi = this.props.BoardApi;
         this.room = false;
         this.state = {
             leftCard: null,
@@ -32,11 +32,15 @@ class Choices extends React.Component {
             ended: false,
             voters: {left: [], right: []},
             hasVoted: false,
-            hasBoardPermissions: false,
+            hasBoardPermissions: null,
+            hasParamsMissing: false,
             selectedSide: null,
-            roomVoters: []
-        }
-        if (params.roomKey !== undefined) {
+            roomVoters: [],
+            boardId : null,
+            hasUrlWrong:false,
+            progress: 0
+        };
+        if (this.props.roomKey !== null) {
             this.setUpRoom(component);
         }
         if (socket) {
@@ -44,7 +48,7 @@ class Choices extends React.Component {
         }
     }
 
-    setUpSocket (component) {
+    setUpSocket(component) {
         socket.on('votesInfo', function (leftVoters, rightVoters) {
             component.setState({
                 voters: {
@@ -52,36 +56,67 @@ class Choices extends React.Component {
                     right: rightVoters,
                 }
             })
-        })
+        });
 
         socket.on('castBoardIdToVoters', function (boardId) {
-            component.Trello.boards.get(boardId, function () {
+            component.BoardApi.getBoard(boardId, function () {
                 component.setState({
+                    boardId : boardId,
                     hasBoardPermissions: true
+                },function(){
+                    component.room.castGetCurrentChoice();
                 })
             }, function () {
                 component.setState({
+                    boardId : boardId,
                     hasBoardPermissions: false
                 }, function () {
-                    component.room.leave(component.trelloId)
+                    component.room.castGetCurrentChoice();
+                    component.room.leave(component.sortelloId)
                 })
-            })
-        })
+            });
+        });
 
-        socket.on('nextChoice', function (leftCard, rightCard) {
+        socket.on('nextChoice', function (leftCard, rightCard, progress) {
             component.setState({
                 leftCard: leftCard,
                 rightCard: rightCard,
+                progress: progress,
                 hasVoted: false,
                 selectedSide: null
             })
-        })
+        });
 
         socket.on('roomVotersUpdated', function (roomVoters) {
             component.setState({
                 roomVoters: roomVoters
             })
-        })
+        });
+
+        socket.on('error', function () {
+            component.setState({
+                hasUrlWrong: true
+            })
+        });
+
+        socket.on('progress-bar', function(progress){
+            component.setState({
+                progress: progress
+            })
+        });
+
+        socket.on('paramsToVoters',function(extId, fw){
+
+            //if extId is null = object, if extId is string = string
+            if(typeof(extId)!=="string"){
+                extId=JSON.stringify(extId);
+            }
+           if(extId!==component.props.extId || params.fw !== fw) {
+               component.setState({
+                   hasUrlWrong:true
+               })
+           }
+        });
 
         socket.on('prioritizationEnded', function () {
             component.setState({
@@ -90,35 +125,38 @@ class Choices extends React.Component {
         })
     }
 
-    setUpRoom (component) {
-        component.state.roomId = params.roomKey
+    setUpRoom(component) {
+        if(params.extId === undefined || params.fw === undefined){
+            component.setState({
+                hasUrlWrong: true
+            })
+        }
         if (socket) {
-            component.room = new Room(socket, params.roomKey);
-            socket.on('connect', function () {
-                component.props.Trello.members.get('me', {}, function (data) {
-                    component.trelloId = data.id
-                    component.trelloAvatar = '//trello-avatars.s3.amazonaws.com/' + data.avatarHash + '/50.png'
-                    if (data.avatarHash === null) {
-                        component.trelloAvatar = '//www.gravatar.com/avatar/' + data.gravatarHash + '?s=64&d=identicon'
-                    }
-                    component.room.join(component.trelloId, component.trelloAvatar)
-                    component.room.getBoardId()
-                    component.room.getCurrentChoice()
-                }, function (e) {
-                    console.log(e);
-                });
+            component.room = new Room(socket, this.props.roomKey);
+            component.BoardApi.getMembers('me', {}, function (data) {
+                let normalizedData = component.BoardApi.normalizeData(data);
+                component.sortelloId = normalizedData.id;
+                component.sortelloAvatar = normalizedData.avatar;
+                if (component.sortelloAvatar.includes("null")) {
+                    component.sortelloAvatar = '//www.gravatar.com/avatar/' + normalizedData.gravatar + '?s=64&d=identicon'
+                }
+                component.room.join(component.sortelloId, component.sortelloAvatar);
+                component.room.checkParams();
+                component.room.castGetBoardId();
+            }, function (e) {
+                console.log(e);
             });
 
             window.addEventListener("beforeunload", (ev) => {
-                ev.preventDefault()
-                component.room.leave(component.trelloId)
+                ev.preventDefault();
+                component.room.leave(component.sortelloId)
             });
         }
     }
 
-    handleCardClicked (side) {
+    handleCardClicked(side) {
         if (!this.state.hasVoted && this.room) {
-            this.room.castCardClicked(side, this.trelloId, this.trelloAvatar)
+            this.room.castCardClicked(side, this.sortelloId, this.sortelloAvatar)
         }
         this.setState({
             hasVoted: true,
@@ -127,28 +165,36 @@ class Choices extends React.Component {
     }
 
     renderForbidden () {
-        return  <div>
-                    <div className="no-access-message__container">
-                        <AccessdeniedAnimation />
-                        <div id="forbidden-div" className="no-access-message__heading">Ooops!</div>
-                <div className="no-access-message__paragraph">You have no access to this board, please contact board's administrator to gain access.</div>
-                    </div>
-                </div>
+        return  <ErrorBoard text="You have no access to this board, please contact
+                        board's administrator to gain access."/>
     }
 
-    renderLoading () {
-        return (<span>Loading...</span>);
+    renderUrlError(){
+        return <ErrorBoard text="Url isn't correct, please contact board's administrator to get a new one."/>
     }
 
-    render () {
-        if (!this.state.hasBoardPermissions) {
-            return this.renderForbidden()
-        }
-        if (this.state.leftCard == null || this.state.rightCard == null) {
+    renderLoading() {
+        return <Loader/>;
+    }
+
+    render() {
+        if ((this.state.leftCard == null || this.state.rightCard == null) && this.state.hasBoardPermissions === null &&
+        !this.state.hasUrlWrong) {
             return this.renderLoading()
         }
+
+        if (this.state.hasBoardPermissions===false) {
+            return this.renderForbidden()
+        }
+
+        if(this.state.hasUrlWrong){
+            return this.renderUrlError();
+        }
+
         if (this.state.ended) {
-            return (<PrioritizationEnd/>)
+            let url = this.props.BoardApi.getFinalUrl(this.state.boardId, this.props.extId);
+            return <PrioritizationEnd
+                url = {url} BoardApi = {this.BoardApi}/>
         }
         return (
             <ChoicesView
@@ -161,7 +207,7 @@ class Choices extends React.Component {
                 handleCardClicked={this.handleCardClicked}
                 handleGoToNextVoting={() => {
                 }}
-                progress={0}
+                progress={this.state.progress}
                 selectedSide={this.state.selectedSide}
                 role="voter"
             />

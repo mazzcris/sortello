@@ -4,7 +4,7 @@ module.exports.accessFromChromeExtension = function (b = null, username = null, 
       browser = b;
     }
     browser.ignoreSynchronization = true;
-    browser.get('/app.html?extId=' + (process.env.TEST_TRELLO_EXTID || browser.params.testTrelloExtId));
+    browser.get('/app.html?extId=' + (process.env.TEST_TRELLO_EXTID || browser.params.testTrelloExtId)+"&fw=t");
     let EC = protractor.ExpectedConditions;
     let continueButton = browser.element(by.css('.continue-to-choices--button'));
     browser.wait(EC.visibilityOf(continueButton), 20000).then(function () {

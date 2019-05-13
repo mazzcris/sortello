@@ -3,53 +3,50 @@
 	.selection__wrapper {
 		padding: 96px 25% 56px;
 	}
+
 	.selection__heading {
 		font-size: 32px;
 		margin-bottom: 32px;
 	}
+
 	.select-field__select {
 	    font-size: 18px;
 	    padding: 16px;
-	    min-width: 480px;
-	    margin: 16px 0;
+	}
+
+	.selection__container {
+	  display: grid;
+	  grid-template-columns: 100%;
 	}
 }
 
-@media (max-width: 1280px) {
-
-	.selection__wrapper {
-		padding: 96px 120px 56px;
-	}
-	.selection__heading {
-		font-size: 32px;
-		margin-bottom: 32px;
-	}
-	.select-field__select {
-	    font-size: 18px;
-	    padding: 16px;
-	    min-width: 480px;
-	    margin: 16px 0;
-	}
-}
 
 @media (max-width: 1024px) {
 
 	.selection__wrapper {
 		padding: 96px 80px 56px;
 	}
+
 	.selection__container {
 		padding: 40px 32px;
 	}
+
 	.selection__heading {
 		font-size: 32px;
 		margin-bottom: 32px;
 	}
-	.select-field__select {
 
+	.select-field__select {
 	    font-size: 18px;
 	    padding: 16px;
-	    min-width: 480px;
-	    margin: 16px 0;
+	}
+
+	.button__start-prioritizing {
+		margin-right: 0;
+	}
+
+	.selection-form {
+		margin: 0 0 20px 0;
 	}
 }
 
@@ -58,44 +55,54 @@
 	.selection__wrapper {
 		padding: 56px 56px 32px;
 	}
+
 	.selection__container {
-		padding: 40px 32px;
+		padding: 40px 0;
 	}
+
 	.selection__heading {
 		font-size: 24px;
 		margin-bottom: 32px;
 	}
+
 	.select-field__select {
 
 	    font-size: 16px;
 	    padding: 16px;
-	    min-width: 320px;
-	    margin: 16px 0;
+	    width:100%;
 	}
 }
 
 @media (max-width: 480px) {
 
 	.selection__wrapper {
-		padding: 40px 32px 32px;
+		padding: 56px 16px 32px;
 	}
+
 	.selection__container {
-		padding: 24px 20px;
+		padding: 24px 0 0;
 	}
+
 	.selection__heading {
 		font-size: 21px;
 		margin-bottom: 16px;
 	}
+
 	.select-field__select {
 
 	    font-size: 14px;
 	    padding: 16px;
-	    min-width: 42px;
-	    margin: 8px 0;
 	}
+
 	.undo__button {
 		font-size: 14px;
 	}
+
+	.selection-form {
+		margin-right: 0;
+		margin-bottom: 12px;
+	}
+
 }
 
 @media (max-width: 320px) {
@@ -103,18 +110,19 @@
 	.selection__wrapper {
 		padding: 40px 16px 32px;
 	}
+
 	.selection__container {
-		padding: 16px;
+		padding: 16px 0;
 	}
+
 	.selection__heading {
 		font-size: 20px;
 		margin-bottom: 16px;
 	}
+
 	.select-field__select {
 
 	    font-size: 14px;
 	    padding: 16px;
-	    min-width: 42px;
-	    margin: 8px 0;
 	}
 }

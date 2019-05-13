@@ -21,17 +21,25 @@ describe('sort list asc', function () {
         });
 
         element.all(by.id("update_board")).count().then(function (size) {
-          if (size == 0) {
+          if (size === 0) {
             nextChoice();
           }
         });
       }
 
-      let allLabel = element(by.css('.label__item.label__blue'));
-      browser.wait(EC.presenceOf(allLabel), 20000).then(function () {
-        allLabel.click();
-        nextChoice();
-      })
+      let options = element.all(by.tagName('option'));
+      browser.wait(EC.presenceOf(options),2000).then(function(){
+          options.filter(function(elem){
+              return elem.getText().then(function (text) {
+                  return text === 'Blue';
+              });
+          }).first().click()
+          let buttonStart = element(by.css('.button__start-prioritizing'));
+          browser.wait(EC.presenceOf(buttonStart),2000).then(function(){
+              buttonStart.click();
+              nextChoice();
+          });
+      });
 
 
       protractor.expectRecap.toBe(['3', '4', '6', '10']);

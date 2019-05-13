@@ -3,11 +3,12 @@ import CopyToClipboard from "./CopyToClipboard.jsx"
 
 class RoomLink extends React.Component {
     render () {
-        let copyToClipboardBtn = <button>Copy to clipboard</button>
-        let copyToClipboardSuccess = <button>Copied to clipboard</button>
-        let copyToClipboardError = <button>Error</button>
+        let copyToClipboardBtn = <button>Copy to clipboard</button>;
+        let copyToClipboardSuccess = <button>Copied to clipboard</button>;
+        let copyToClipboardError = <button>Error</button>;
         if (this.props.roomId !== null) {
-            let shareLink = window.location.protocol + "//" + window.location.hostname + window.location.pathname + '?roomKey=' + this.props.roomId
+            let shareLink = window.location.protocol + "//" + window.location.hostname + port + window.location.pathname +
+                '?roomKey=' + this.props.roomId + "&extId="+this.props.extId+"&fw="+(this.props.BoardApi.getShortenedExtension());
             return (
 
                     <div className="share-link__container">
@@ -21,7 +22,7 @@ class RoomLink extends React.Component {
 
             )
         }
-        return (<div></div>)
+        return (<div/>)
     }
 }
 

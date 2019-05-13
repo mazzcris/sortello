@@ -9,7 +9,7 @@ describe('cannot vote if cannot access to board', function () {
   afterEach(function () {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
   });
-  it('checks voters board permissions', function (done) {
+  it('cannot vote if does not have access to board', function (done) {
 
     browser.ignoreSynchronization = true;
     browser.driver.manage().window().setSize(840, 1032);
@@ -24,13 +24,11 @@ describe('cannot vote if cannot access to board', function () {
     browser2.driver.manage().window().setSize(840, 524);
     browser2.driver.manage().window().setPosition(840, 0);
 
+
     protractor.accessFromChromeExtension.accessFromChromeExtension(browser1).then(function () {
       protractor.accessFromChromeExtension.accessFromChromeExtension(browser2, browser.params.testTrello2Username, browser1.params.testTrello2Password).then(function () {
         let EC = protractor.ExpectedConditions;
         browser1.get('/app.html?extId=' + browser.params.testTrelloPrivateBoardExtId);
-        let allLabel = element(by.css('.label__item.label__none'))
-        browser1.wait(EC.presenceOf(allLabel), 20000).then(function () {
-          allLabel.click();
           let newRoomButton = element(by.css('#new-room-button'))
           browser1.wait(EC.presenceOf(newRoomButton), 20000).then(function () {
             newRoomButton.click();
@@ -41,6 +39,7 @@ describe('cannot vote if cannot access to board', function () {
                 browser2.get(link)
 
                 browser2.wait(EC.presenceOf(element(by.id('container_div'))), 20000).then(function () {
+                  browser.sleep(2000);
                   expect(browser2.element(by.id('container_div')).getText()).toMatch(/.*You have no access to this board.*/)
                   browser2.element.all(by.id("second_div")).count().then(function (count) {
                     expect(count).toEqual(0)
@@ -49,12 +48,10 @@ describe('cannot vote if cannot access to board', function () {
                     done()
                   })
                 })
-
               })
             })
           })
-        })
       });
     });
-  });
+ });
 });

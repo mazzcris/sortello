@@ -2,11 +2,8 @@ import React from "react";
 import Header from '../Header.jsx';
 import Card from '../Card.jsx';
 import Footer from "../Footer.jsx"
-import {clone} from "lodash"
-import {find} from "lodash"
-import {findIndex} from "lodash"
-import {remove} from "lodash"
 import Avatars from '../Avatars.jsx'
+import Loader from "../Loader.jsx";
 
 function closeOverlay() {
     document.getElementById('overlay__share-room').style.height = "0%";
@@ -35,23 +32,23 @@ class ChoicesView extends React.Component {
         if (this.props.role==='voter') {
             return (
                 <div className="container__voter-info">
-                    <div className="voter-info__dot"></div>
+                    <div className="voter-info__dot"/>
                     <div className="voter-info__text">You are in a shared room</div>
                 </div>
             )
-        } 
+        }
         return null
     }
 
     render () {
-        let undoButton = ''
+        let undoButton = '';
         if (this.props.handleUndoClicked) {
             undoButton =
                 <button onClick={() => this.props.handleUndoClicked()} id="undo_button"
                         className="normalize__undo-button">
                     <div className="undo__button">
                         <div className="undo__icon">
-                            <img src="assets/icons/undo-icon.svg" alt=""/>
+                            <img src="../../assets/icons/undo-icon.svg" alt=""/>
                             Undo choice
                         </div>
                     </div>
@@ -60,8 +57,9 @@ class ChoicesView extends React.Component {
 
 
         if (this.props.leftCard == null || this.props.rightCard == null) {
-            return (<div><span>Loading...</span></div>);
+            return (<Loader/>);
         }
+
         return (
             <div id="second_div">
                 <div className="container__choose-card">
@@ -79,8 +77,7 @@ class ChoicesView extends React.Component {
                     </div>
                     {this.printCard('left_button', 'node', this.props.leftCard.value, this.props.voters.left)}
                     {this.printCard('right_button', 'compareNode', this.props.rightCard.value, this.props.voters.right)}
-                    {/*<TreeDraw tree={this.state.rootNode}></TreeDraw>*/}
-                    
+
                     <div className="container__actions-bar">
                         {undoButton}
                         {this.renderVoterInfo()}
@@ -92,14 +89,14 @@ class ChoicesView extends React.Component {
                     </div>
                 </div>
                 <div className={"footer"}>
-                    <Footer/>
                     <Header/>
+                    <Footer/>
                 </div>
 
                 <div className="overlay__share-room" id="overlay__share-room">
                     <div className="share-room__container">
                         <div className="share-room__close" >
-                            <img id="share-room__close" src="assets/icons/quit.svg" alt="" onClick={() => {
+                            <img id="share-room__close" src="../../assets/icons/quit.svg" alt="" onClick={() => {
                                 closeOverlay()
                             }}/>
                         </div>
@@ -107,8 +104,6 @@ class ChoicesView extends React.Component {
                         {this.props.roomLink}
                     </div>
                 </div>
-                
-                
             </div>
         )
     }

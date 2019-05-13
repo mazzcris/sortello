@@ -22,7 +22,6 @@ module.exports.accessFromChromeExtension = function () {
     EC = protractor.ExpectedConditions;
     let submitButton = element(by.css('input#user'));
     browser.wait(EC.visibilityOf(submitButton), 10000);
-
     let loginButton = element(by.css('input#login'));
     element(by.css('input#user')).sendKeys(process.env.TEST_TRELLO_USERNAME || browser.params.testTrelloUsername);
     element(by.css('input#password')).sendKeys(process.env.TEST_TRELLO_PASSWORD || browser.params.testTrelloPassword);

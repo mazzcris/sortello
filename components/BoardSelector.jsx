@@ -8,7 +8,11 @@ class BoardSelector extends React.Component {
     }
 
     render () {
-        return <Select
+        return (
+
+        <div className="selection-form">
+        <div className="board-selection__microcopy">First of all choose the board you want to prioritize</div>
+        <Select
             onChange={this.props.onChange}
             placeHolder={"Select a board"}
             options={
@@ -23,6 +27,8 @@ class BoardSelector extends React.Component {
                 }.bind(this))
             }
         />
+        </div>
+        );
     }
 
 

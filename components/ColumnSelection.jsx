@@ -1,11 +1,16 @@
 import React from "react"
-import { find } from "lodash"
+import {find} from "lodash"
 import Header from './Header.jsx';
 import BoardSelector from './BoardSelector.jsx'
 import ListSelector from './ListSelector.jsx'
 import LabelSelector from './LabelSelector.jsx'
+import Footer from "./Footer.jsx";
+import ErrorBoard from './ErrorBoard.jsx';
+import ProceedButton from "./ProceedButton.jsx";
 import queryString from "query-string";
-import Footer from "./Footer.jsx"
+import Loader from "./Loader.jsx";
+
+const params = queryString.parse(location.search);
 
 class ColumnSelection extends React.Component {
     constructor(props) {
@@ -13,49 +18,87 @@ class ColumnSelection extends React.Component {
         this.state = {
             boards: [],
             lists: [],
+            listCards : [],
             labels: [],
             groupedboards: [],
             organizations: [],
             noCardsError: false,
-            fromExtension: false,
-            boardId: null
-        }
+            boardId: null,
+            finishLoading: false,
+            hasBoardPermissions: null,
+            hasNotEnoughCard: false,
+            selectedLabel: null,
+            selectedList: false,
+            username: ""
+        };
         this.getBoardColumns = this.getBoardColumns.bind(this);
         this.retrieveCardsByListId = this.retrieveCardsByListId.bind(this);
         this.handleBoardClicked = this.handleBoardClicked.bind(this);
         this.handleListClicked = this.handleListClicked.bind(this);
+        this.componentDidMount = this.componentDidMount.bind(this);
+        this.handleProceedButtonClicked = this.handleProceedButtonClicked.bind(this);
         this.labelSelected = this.labelSelected.bind(this);
         this.getBoards = this.getBoards.bind(this);
+        this.renderForbidden = this.renderForbidden.bind(this);
+        this.handleLabelClicked = this.handleLabelClicked.bind(this);
     }
 
-    componentDidMount() {
+    componentDidMount () {
         let component = this;
-        const params = queryString.parse(location.search);
-
-        if (params.boardId !== undefined && params.listName !== undefined) {
-            alert("Looks like you are using and outdated version of the Sortello Chrome Extension, please update. Thank you!");
-        }
-
-        if (params.extId !== undefined) {
-            component.setState({ fromExtension: true });
-            component.props.Trello.cards.get(this.cleanForFirefoxAddon(params.extId), null, function (card) {
-                component.retrieveCardsByListId(card.idList)
+        if(params.extId === "error"){
+            component.setState({
+                hasNotEnoughCard : true
             });
         }
+        let BoardApi = this.props.BoardApi;
+        localStorage.removeItem("extId");
+        localStorage.removeItem("fromExtension");
+        if (component.props.fromExtension !== null) {
+            if (component.props.BoardApi.getName() !== "Github") {
+                BoardApi.getCardById(component.props.extId, null, function (card) {
+                    component.retrieveCardsByListId(card.idList)
+                }, function () {
+                    component.setState({
+                        hasBoardPermissions: false
+                    })
+                })
+            } else {
+                component.props.BoardApi.checkPermissions(component.props.extId).then(function(){
+                    component.retrieveCardsByListId(component.props.extId)
+                }, function () {
+                    component.setState({
+                        hasBoardPermissions: false
+                    })
+                })
+            }
+        }else{
+            this.props.BoardApi.getMembers('me', function (data) {
+                let username = data.username;
+                component.setState({
+                    username: username
+                })
+            }, function () {
+                console.log("error username");
+            });
 
-        if (this.state.organizations.length > 0) {
-            return;
+            if (this.state.organizations.length > 0) {
+                return;
+            }
+
+            this.getBoards()
         }
-        this.getBoards(Trello)
+
+        this.setState({
+            finishLoading:true
+        });
+
+
     }
 
-    cleanForFirefoxAddon(str) {
-        return str.replace('#', '');
-    }
-
-    getBoards(Trello) {
-        let component = this
-        Trello.members.get('me', {
+    getBoards () {
+        let component = this;
+        let BoardApi = this.props.BoardApi;
+        BoardApi.getMembers('me', {
             organizations: "all",
             organization_fields: "all",
             boards: "open",
@@ -85,31 +128,20 @@ class ColumnSelection extends React.Component {
         });
     }
 
-    labelSelected(labelId) {
-        let listCards = this.state.listCards;
-        if (labelId !== 0) {
-            let label = find(this.state.labels, { 'id': labelId });
-            listCards = _.filter(this.state.listCards, function (card) {
-                return find(card.labels, { 'id': label.id }) !== undefined;
-            });
-        }
-        if (listCards.length === 0) {
-            this.setState({
-                labels: [],
-                noCardsError: true
-            })
-        } else {
-            this.props.handleCards(listCards, this.state.boardId);
-        }
+    labelSelected (labelId, cb) {
+        this.setState({selectedLabel: labelId},function(){
+            cb();
+        })
     }
 
     retrieveCardsByListId(listId) {
         let that = this;
         let labels = [];
-        this.props.Trello.lists.get(listId, { cards: "open" }, function (data) {
-            let listCards = data.cards;
+        this.props.BoardApi.getCardsByListId(listId, {cards: "open"}, function (data,html_url) {
+            let listCards = data;
             that.setState({
-                listCards: listCards
+                listCards: listCards,
+                selectedList : true
             });
             // Display an error message if current list contains no cards
             if (listCards.length === 0) {
@@ -124,13 +156,14 @@ class ColumnSelection extends React.Component {
                             labels.push(label);
                         }
                     });
-                })
+                });
                 that.setState({
                     labels: labels,
-                    boardId: data.idBoard
+                    boardId: data[0].idBoard
                 }, function () {
-                    if (that.state.labels.length === 0) {
-                        that.labelSelected(0)
+                    that.props.setUrl(html_url);
+                    if(that.props.fromExtension !== null) {
+                        that.clickProceedButtonIfLabelsAreZero();
                     }
                 });
             }
@@ -139,30 +172,48 @@ class ColumnSelection extends React.Component {
         });
     }
 
+    clickProceedButtonIfLabelsAreZero(){
+        let that=this;
+        if(that.state.labels.length === 0){
+            that.labelSelected(0,function(){
+                that.handleProceedButtonClicked();
+            });
+        }
+    }
+
     getBoardColumns(board) {
-        this.setState({
-            lists: board.lists
-        });
+        if(board===undefined){
+            this.setState({
+                lists: [],
+                selectedLabel: null
+            });
+        }else{
+            this.setState({
+                lists: board.lists
+            });
+        }
     }
 
     handleBoardClicked(boardId) {
-        const currentBoardId = this.state.boardId;
-
-        if (boardId !== currentBoardId) {
-            this.setState({
-                boardId,
-                labels: [],
-                noCardsError: false,
-            })
+        this.setState({
+            boardId,
+            labels: [],
+            noCardsError: false,
+            selectedList: 0,
+            selectedLabel: null,
+            lists : [],
+        },function(){
             let board = find(this.state.boards, { 'id': boardId });
             this.getBoardColumns(board)
-        }
+        });
     }
 
     handleListClicked(listId) {
         this.setState({
             noCardsError: false,
-        })
+            selectedList: false,
+            selectedLabel: null,
+        });
 
         // If list does not exist, reset all labels (it means we have clicked the 'Select List' entry)
         let list = find(this.state.lists, { 'id': listId });
@@ -171,58 +222,126 @@ class ColumnSelection extends React.Component {
         } else {
             this.setState({
                 labels: [],
+                selectedLabel: null
             })
         }
     }
 
-    renderBoardSelector() {
-        if (this.state.fromExtension === true) {
+    renderForbidden(){
+        return (
+            <div>
+                <ErrorBoard text="You have no access to this board, please contact
+                        board's administrator to gain access."/>
+            </div>
+        )
+    }
+
+    renderNotEnoughCard(){
+        return (
+            <div>
+                <ErrorBoard text={"Your list seems to have 0 or 1 card, please fill the list with more cards."} message={true}/>
+            </div>
+        )
+    }
+
+    renderBoardSelector () {
+        if (this.props.fromExtension !== null) {
             return ""
         }
         return <BoardSelector groupedboards={this.state.groupedboards}
-            onChange={this.handleBoardClicked} />
+                              onChange={this.handleBoardClicked} />
     }
 
-    renderListSelector() {
-        if (this.state.lists.length === 0 || this.state.fromExtension === true) {
+    handleLabelClicked (labelId) {
+        this.labelSelected(labelId, () => {})
+    }
+
+    handleProceedButtonClicked () {
+        let labelId = this.state.selectedLabel;
+        let listCards = this.state.listCards;
+        if (labelId !== 0 && labelId !== '0') {
+            labelId = this.props.BoardApi.getShortenedExtension() === "g"? parseInt(labelId):labelId;
+            let label = find(this.state.labels, {'id': labelId});
+            listCards = _.filter(this.state.listCards, function (card) {
+                return find(card.labels, {'id': label.id}) !== undefined;
+            });
+        }
+        if(listCards.length<2){
+            this.setState({
+                hasNotEnoughCard : true,
+            })
+        }else{
+            this.props.handleCards(listCards, this.state.boardId);
+        }
+    }
+
+    renderListSelector () {
+        if (this.state.lists.length === 0 || this.props.fromExtension !== null) {
             return ""
         }
-        return <p><ListSelector lists={this.state.lists}
-            onChange={this.handleListClicked} /></p>
+        return <ListSelector lists={this.state.lists}
+            onChange={this.handleListClicked} />
     }
 
     renderLabelSelector() {
-        if (this.state.labels.length === 0) {
+        if (!this.state.selectedList) {
             return ""
         }
-        return <LabelSelector labels={this.state.labels} onClick={this.labelSelected} />
+        return <LabelSelector labels={this.state.labels} onChange={this.handleLabelClicked}/>
+    }
+
+    renderProceedButton () {
+        if (this.state.selectedLabel === null) {
+            return ""
+        }
+        return <ProceedButton onClick={this.handleProceedButtonClicked} />
+    }
+
+    renderLoader(){
+        return <Loader/>
     }
 
     render() {
+
+        if(this.state.hasNotEnoughCard === true){
+            return this.renderNotEnoughCard();
+        }
+
+        if (this.state.hasBoardPermissions === false) {
+            return this.renderForbidden();
+        }
+
+        if(!this.state.finishLoading){
+            return this.renderLoader();
+        }
+        
         return (
             <div id="card_url_div">
                 <div className="selection__wrapper">
-                    <div className="selection__container selection__container--animation">
-                        <div className="select-list--text-container selection__heading">
+                    <div>
+                        <div className="selection__heading">
                             {
-                                (this.state.fromExtension === true) ?
-                                    "Filter by label, or select All" :
-                                    "First of all, select the board you want to prioritize"
+                                (this.props.fromExtension !== null) ?
+                                    (!this.state.selectedList)?
+                                        <Loader/>:
+                                        "Filter by label, or select All" :`Welcome to sortello, ${this.state.username}`
+
                             }
                         </div>
-                        {this.renderBoardSelector()}
-                        {this.renderListSelector()}
-                        {this.renderLabelSelector()}
-
-                        {
-                            (this.state.noCardsError === true) ?
-                                "There are no cards for the selected list! Try choosing another one" :
-                                ""
-                        }
+                        <div className="selection__container selection__container--animation">
+                            {this.renderBoardSelector()}
+                            {this.renderListSelector()}
+                            {this.renderLabelSelector()}
+                            {this.renderProceedButton()}
+                            {
+                                (this.state.noCardsError === true) ?
+                                    "There are no cards for the selected list! Try choosing another one" : ""
+                            }
+                        </div>
                     </div>
                     <div className={"footer footer--animated"}>
-                        <Footer />
-                        <Header />
+                        <Header/>
+                        <Footer/>
                     </div>
                 </div>
             </div>

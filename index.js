@@ -26,8 +26,7 @@ require("./css/responsive/recap__responsive.css");
 require("./css/prioritization-end.css");
 require("./css/responsive/prioritization-end__responsive.css");
 require("./css/no-access-message.css");
-
-
+require("./css/loader.css");
 
 const containerEl = document.getElementById("container")
 render(<App/>, containerEl)

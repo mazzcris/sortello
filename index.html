@@ -8,6 +8,7 @@
     <meta name="twitter:title" content="Prioritize your Trello lists, the simple way" />
     <meta name="twitter:description" content="Try Sortello!" />
     <meta name="twitter:image" content="https://sortello.com/assets/logo_large.jpg" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="css/landing-page.css">
     <link rel="stylesheet" href="css/responsive/landing-page__responsive.css">
     <link rel="stylesheet" href="css/buttons.css">
@@ -131,7 +132,9 @@
             <div class="why-works__image">
                 <img src="./assets/icons/privacy.png" alt="">
             </div>
-            <div class="why-works__description"> We do not store any data server-side. Sortello uses cookies only to enable Trello authentication and anonimously track visits to the page. Read more <a class="landing-page__link" href="/policy.html" target="_blank">here</a>.
+            <div class="why-works__description"> We do not store any data server-side. Sortello uses cookies only to
+                enable Trello authentication and anonimously track visits to the page. Read more <a
+                        class="landing-page__link" href="/policy.html" target="_blank">here</a>.
             </div>
         </div>
     </div>
@@ -176,7 +179,7 @@
         <a href="https://www.producthunt.com/posts/sortello" class="social__item" target="_blank">
             <img src="/assets/icons/social/product-hunt.svg" alt="product-hunt-icon">
         </a>
-        
+
     </div>
     <div class="landing-footer__item"><a href="policy.html" class="landing-footer__link">Disclaimer and privacy policy</a>
         | Proudly supported by <a target="_blank" href="http://ideato.it" class="landing-footer__link">ideato</a></div>
@@ -187,53 +190,65 @@
         <div class="back-to-top__button">Back to top</div>
     </a>
 </div>
-<script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script>
-  jQuery(document).ready(function ($) {
-    var ua = navigator.userAgent;
+    jQuery(document).ready(function ($) {
+        var ua = navigator.userAgent;
 
-    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(ua)) {
-      $('.mobile-other').show();
-    }
-    else if (/Chrome/i.test(ua)) {
-      $('.chrome-desktop').show();
-    }
-    else if (/Firefox/i.test(ua)) {
-        $('.firefox-desktop').show();
-    }
-    else {
-      $('.other-desktop').show();
-    }
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(ua)) {
+            $('.mobile-other').show();
+        }
+        else if (/Chrome/i.test(ua)) {
+            $('.chrome-desktop').show();
+        }
+        else if (/Firefox/i.test(ua)) {
+            $('.firefox-desktop').show();
+        }
+        else {
+            $('.other-desktop').show();
+        }
 
-    $('.scroll-to').click(function (event) {
-      event.preventDefault();
-      let scrollTo = $(this).attr('href');
-      $('html, body').animate({
-        scrollTop: $(scrollTo).offset().top
-      }, 700, 'swing');
+        $('.scroll-to').click(function (event) {
+            event.preventDefault();
+            let scrollTo = $(this).attr('href');
+            $('html, body').animate({
+                scrollTop: $(scrollTo).offset().top
+            }, 700, 'swing');
+        });
+
+
+        let res = window.location.href.match(/\/\?extId=/g)
+        if (res !== null) {
+            window.location.replace(window.location.href.replace("/?extId=", "/app.html?extId="))
+        }
+
+
     });
 
+    if (gaTrackingId) {
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r;
+            i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
 
-    let res = window.location.href.match(/\/\?extId=/g)
-    if(res !== null){
-      window.location.replace(window.location.href.replace("/?extId=", "/app.html?extId="))
+        ga('create', gaTrackingId, {
+            'siteSpeedSampleRate': 100,
+            'anonymizeIp': true,
+            'storage': 'none',
+            'clientId': window.localStorage.getItem('ga_clientId')
+        });
+        ga(function (tracker) {
+            window.localStorage.setItem('ga_clientId', tracker.get('clientId'));
+        });
+        ga('send', 'pageview');
     }
-
-
-  });
-
-  if(gaTrackingId){
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-    ga('create', gaTrackingId,  {'siteSpeedSampleRate': 100, 'anonymizeIp': true, 'storage': 'none', 'clientId': window.localStorage.getItem('ga_clientId')});
-    ga(function(tracker) {
-      window.localStorage.setItem('ga_clientId', tracker.get('clientId'));
-    });
-    ga('send', 'pageview');
-  }
 </script>
 
 <a class="forkMeRibbon" href="https://github.com/mazzcris/sortello" target="_blank">

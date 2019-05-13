@@ -13,7 +13,7 @@ describe('dotvoting', function () {
 
     browser.ignoreSynchronization = true;
 
-    let browser1 = browser
+    let browser1 = browser;
     let browser2 = browser.forkNewDriverInstance();
     let browser3 = browser.forkNewDriverInstance();
 
@@ -34,35 +34,45 @@ describe('dotvoting', function () {
       ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
       ['10', '1', '2', '9', '3', '4', '8', '5', '7', '6'],
       ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-    ]
+    ];
+
+    let EC = protractor.ExpectedConditions;
+    let allLabels = element.all(by.tagName('option')).get(1);
+    let buttonStart = element(by.css('.button__start-prioritizing'));
+
+
 
     return protractor.accessFromChromeExtension.accessFromChromeExtension(browser1).then(function () {
       protractor.accessFromChromeExtension.accessFromChromeExtension(browser2, browser1.params.testTrello2Username, browser1.params.testTrello2Password).then(function () {
         protractor.accessFromChromeExtension.accessFromChromeExtension(browser3, browser1.params.testTrello3Username, browser1.params.testTrello3Password).then(function () {
 
-          protractor.common.waitForElementAndClick('.label__item.label__none', browser1).then(() => {
-            protractor.common.waitForElementAndClick('#new-room-button', browser1).then(() => {
-              protractor.common.waitForElement('#room-link', browser1).then(function () {
-                let roomLinkElement = element(by.css('#room-link'))
-                roomLinkElement.getAttribute('value').then(function (link) {
-                  link = link.replace(browser.params.hostname + "/app.html", browser.params.hostname + ":4000/app.html")
-                  browser2.get(link)
-                  browser3.get(link)
-                  protractor.common.waitForElementAndClick('#share-room__close', browser1).then(() => {
-                    startChoices();
-                  });
+          browser1.wait(EC.presenceOf(allLabels),2000).then(function(){
+            allLabels.click();
+            browser1.wait(EC.presenceOf(buttonStart),2000).then(function() {
+              buttonStart.click();
+              protractor.common.waitForElementAndClick('#new-room-button', browser1).then(() => {
+                protractor.common.waitForElement('#room-link', browser1).then(function () {
+                  let roomLinkElement = element(by.css('#room-link'))
+                  roomLinkElement.getAttribute('value').then(function (link) {
+                    link = link.replace(browser.params.hostname + "/app.html", browser.params.hostname + ":4000/app.html");
+                    browser2.get(link);
+                    browser3.get(link);
+                    protractor.common.waitForElementAndClick('#share-room__close', browser1).then(() => {
+                      startChoices();
+                    });
+                  })
                 })
               })
             })
-          })
+          });
 
           function startChoices () {
 
             browser1.element.all(by.id("update_board")).count().then(function (size) {
               if (size === 0) {
-                makeChoice(browser1, browsersPriorities[0])
-                makeChoice(browser2, browsersPriorities[1])
-                makeChoice(browser3, browsersPriorities[2])
+                makeChoice(browser1, browsersPriorities[0]);
+                makeChoice(browser2, browsersPriorities[1]);
+                makeChoice(browser3, browsersPriorities[2]);
                 let leftContinue = browser1.element.all(by.css(".card-button__continue")).get(0);
                 let rightContinue = browser1.element.all(by.css(".card-button__continue")).get(1);
                 let leftCard = browser1.element(by.css('#left_button .card__title'));
@@ -74,10 +84,10 @@ describe('dotvoting', function () {
                       leftCard.getText().then(function (leftValue) {
                         rightCard.getText().then(function (rightValue) {
                           if (browsersPriorities[0].indexOf(rightValue) < browsersPriorities[0].indexOf(leftValue)) {
-                            rightContinue.click()
+                            rightContinue.click();
                             startChoices()
                           } else {
-                            leftContinue.click()
+                            leftContinue.click();
                             startChoices()
                           }
                         });
@@ -95,9 +105,9 @@ describe('dotvoting', function () {
                 browser1.driver.manage().window().setSize(1280, 1032);
                 return protractor.common.waitForElementAndClick('.trigger-button__link', browser1).then(() => {
                   protractor.common.waitForElement('div.order-recap', browser1).then(function () {
-                    let recap = browser1.element.all(by.css('div.order-recap div.recap__item'))
+                    let recap = browser1.element.all(by.css('div.order-recap div.recap__item'));
                     // done();
-                    expect(recap.getText()).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
+                    expect(recap.getText()).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
                     // recap.getText().then((txt) => {
                       // expect(txt).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
                       // browser1.close()

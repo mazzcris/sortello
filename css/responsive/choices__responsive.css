@@ -1,5 +1,5 @@
 @media (min-width: 1280px) {
-	
+
 	.container__choose-card {
     	padding: 56px 72px 72px;
 	}
@@ -12,7 +12,7 @@
 	.card__title {
     	font-size: 24px;
     }
-    
+
 	.card-button__see-card {
 		font-size: 18px;
 	}
@@ -21,28 +21,21 @@
 	}
 	.button-text__continue {
 		font-size: 18px;
-	}	
+	}
 	.text__prioritization-status {
 		font-size: 20px;
 		margin-top: 56px;
 	}
 	.progressive-bar__status-structure {
-	  margin: 32px 56px 32px;
-	  width: 90%;
 	  height: 16px;
-	  border-radius: 16px;
-	  background-color: #F3F3F3;
-	  max-width: 800px;
 	}
 
 	.progressive-bar__status {
 	  height: 16px;
-	  border-radius: 16px;
-	  width: 800px;
 		}
 
-	
-	
+
+
 }
 
 @media (max-width: 1024px) {
@@ -63,6 +56,9 @@
 	}
 	#second_div {
     padding: 56px 56px 32px;
+	}
+	.card__label {
+	  font-size: 12px;
 	}
 }
 
@@ -156,7 +152,7 @@
 	}
 	.card__admin{
 		height: 16px;
-	} 
+	}
 	.guest__label {
 		font-size: 10px;
 	}
@@ -185,9 +181,7 @@
 	.card__voters {
 		margin-top: 8px;
 	}
-	.progressive-bar__status-structure {
-		margin: 8px 8px 16px;
-	}
+
 	.share-room__container {
 		margin: 10vh 16px;
 		padding: 20px 0;
@@ -201,6 +195,10 @@
 		width: 90%;
 		margin-bottom: 16px;
 		font-size: 12px;
+	}
+	.card__label {
+	  font-size: 10px;
+		padding: 4px 8px;
 	}
 
 

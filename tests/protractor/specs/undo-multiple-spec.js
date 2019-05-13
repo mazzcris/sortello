@@ -50,8 +50,6 @@ describe('sort with multiple undo clicks', function () {
                   }
                 }
               });
-
-
             });
           });
         });
@@ -63,14 +61,19 @@ describe('sort with multiple undo clicks', function () {
         });
       }
 
-      let allLabel = element(by.css('.label__item.label__none'));
-      browser.wait(EC.presenceOf(allLabel), 20000).then(function () {
-        allLabel.click();
-        nextChoice();
-      })
+      let allLabels = element.all(by.tagName('option')).get(1);
+      browser.wait(EC.presenceOf(allLabels),2000).then(function(){
+          allLabels.click();
+          let buttonStart = element(by.css('.button__start-prioritizing'));
+          browser.wait(EC.presenceOf(buttonStart),2000).then(function(){
+              buttonStart.click();
+              nextChoice();
+          });
+      });
 
+      let results = element(by.id('update_board'));
+      browser.wait(EC.presenceOf(results), 50000).then(function () {
       protractor.expectRecap.toBe(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
-    }
-  );
-
+    })
+  });
 });

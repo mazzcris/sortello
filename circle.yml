@@ -1,0 +1,14 @@
+machine:
+  node:
+    version: 6.7.0
+
+dependencies:
+  override:
+    - npm install
+    - npm install webpack -g
+    - npm install webpack-cli -g
+    - webpack
+
+test:
+  override:
+    - npm run unit
