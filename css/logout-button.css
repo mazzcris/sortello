@@ -1,14 +1,20 @@
 .logout__button {
     margin: 32px 0;
     text-align: left;
+    font-size: 10px!important;
+    line-height: 12px!important;
+
 }
 
 .logout__button--style {
   color: white;
   background: transparent;
   border: none;
-  font-family: "Fira Sans", sans-serif;
-  text-decoration: underline;
+  font-family: "Fira Sans";
+  text-transform: uppercase;
+  margin-left: 24px;
+  letter-spacing: 0.83px!important;
+
 }
 
 .logout__fade-in {

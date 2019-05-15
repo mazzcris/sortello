@@ -10,7 +10,9 @@ class Header extends React.Component {
   render () {
     return (
       <div>
-        <button className="logout__button--style" onClick={this.handleLogout}>Logout</button>
+        <div className="logout__button">
+          <button className="logout__button--style" onClick={this.handleLogout}>Logout</button>
+        </div>
       </div>
     );
   }

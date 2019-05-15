@@ -39,7 +39,7 @@ class ChoicesView extends React.Component {
                     <div className="voter-info__text">You are in a shared room</div>
                 </div>
             )
-        } 
+        }
         return null
     }
 
@@ -80,7 +80,7 @@ class ChoicesView extends React.Component {
                     {this.printCard('left_button', 'node', this.props.leftCard.value, this.props.voters.left)}
                     {this.printCard('right_button', 'compareNode', this.props.rightCard.value, this.props.voters.right)}
                     {/*<TreeDraw tree={this.state.rootNode}></TreeDraw>*/}
-                    
+
                     <div className="container__actions-bar">
                         {undoButton}
                         {this.renderVoterInfo()}
@@ -92,8 +92,8 @@ class ChoicesView extends React.Component {
                     </div>
                 </div>
                 <div className={"footer"}>
-                    <Footer/>
                     <Header/>
+                    <Footer/>
                 </div>
 
                 <div className="overlay__share-room" id="overlay__share-room">
@@ -107,8 +107,8 @@ class ChoicesView extends React.Component {
                         {this.props.roomLink}
                     </div>
                 </div>
-                
-                
+
+
             </div>
         )
     }

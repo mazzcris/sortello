@@ -6,6 +6,7 @@ import ListSelector from './ListSelector.jsx'
 import LabelSelector from './LabelSelector.jsx'
 import queryString from "query-string";
 import Footer from "./Footer.jsx"
+import ProceedButton from "./ProceedButton.jsx"
 
 class ColumnSelection extends React.Component {
     constructor(props) {
@@ -18,14 +19,20 @@ class ColumnSelection extends React.Component {
             organizations: [],
             noCardsError: false,
             fromExtension: false,
-            boardId: null
+            boardId: null,
+            selectedLabel: null,
+            username: null
         }
         this.getBoardColumns = this.getBoardColumns.bind(this);
         this.retrieveCardsByListId = this.retrieveCardsByListId.bind(this);
         this.handleBoardClicked = this.handleBoardClicked.bind(this);
         this.handleListClicked = this.handleListClicked.bind(this);
+        this.componentDidMount = this.componentDidMount.bind(this);
+        this.handleProceedButtonClicked = this.handleProceedButtonClicked.bind(this);
         this.labelSelected = this.labelSelected.bind(this);
         this.getBoards = this.getBoards.bind(this);
+        this.handleLabelClicked = this.handleLabelClicked.bind(this);
+        this.getTrelloUsername = this.getTrelloUsername.bind(this);
     }
 
     componentDidMount() {
@@ -46,6 +53,7 @@ class ColumnSelection extends React.Component {
         if (this.state.organizations.length > 0) {
             return;
         }
+        this.getTrelloUsername(Trello)
         this.getBoards(Trello)
     }
 
@@ -85,22 +93,20 @@ class ColumnSelection extends React.Component {
         });
     }
 
-    labelSelected(labelId) {
-        let listCards = this.state.listCards;
-        if (labelId !== 0) {
-            let label = find(this.state.labels, { 'id': labelId });
-            listCards = _.filter(this.state.listCards, function (card) {
-                return find(card.labels, { 'id': label.id }) !== undefined;
-            });
-        }
-        if (listCards.length === 0) {
-            this.setState({
-                labels: [],
-                noCardsError: true
+    getTrelloUsername(Trello) {
+        let component = this
+        Trello.members.get('me', function (data) {
+            let username = data.username;
+            component.setState({
+                username: username
             })
-        } else {
-            this.props.handleCards(listCards, this.state.boardId);
-        }
+        }, function (e) {
+            console.log(e);
+        });
+    }
+
+    labelSelected (labelId) {
+        this.setState({selectedLabel: labelId})
     }
 
     retrieveCardsByListId(listId) {
@@ -175,7 +181,23 @@ class ColumnSelection extends React.Component {
         }
     }
 
-    renderBoardSelector() {
+    handleLabelClicked (labelId) {
+        this.labelSelected(labelId)
+    }
+
+    handleProceedButtonClicked () {
+        let labelId = this.state.selectedLabel
+        let listCards = this.state.listCards;
+        if (labelId !== 0 && labelId !== '0') {
+            let label = find(this.state.labels, {'id': labelId});
+            listCards = _.filter(this.state.listCards, function (card) {
+                return find(card.labels, {'id': label.id}) !== undefined;
+            });
+        }
+        this.props.handleCards(listCards, this.state.boardId);
+    }
+
+    renderBoardSelector () {
         if (this.state.fromExtension === true) {
             return ""
         }
@@ -187,42 +209,51 @@ class ColumnSelection extends React.Component {
         if (this.state.lists.length === 0 || this.state.fromExtension === true) {
             return ""
         }
-        return <p><ListSelector lists={this.state.lists}
-            onChange={this.handleListClicked} /></p>
+        return <ListSelector lists={this.state.lists}
+            onChange={this.handleListClicked} />
     }
 
     renderLabelSelector() {
         if (this.state.labels.length === 0) {
             return ""
         }
-        return <LabelSelector labels={this.state.labels} onClick={this.labelSelected} />
+        return <LabelSelector labels={this.state.labels} onChange={this.handleLabelClicked}/>
+    }
+
+    renderProceedButton () {
+        if (this.state.selectedLabel === null) {
+            return ""
+        }
+        return <ProceedButton onClick={this.handleProceedButtonClicked} />
     }
 
     render() {
         return (
             <div id="card_url_div">
                 <div className="selection__wrapper">
-                    <div className="selection__container selection__container--animation">
-                        <div className="select-list--text-container selection__heading">
+                    <div>
+                        <div className="selection__heading">
                             {
                                 (this.state.fromExtension === true) ?
                                     "Filter by label, or select All" :
-                                    "First of all, select the board you want to prioritize"
+                                    `Welcome to sortello, ${this.state.username}`
                             }
                         </div>
-                        {this.renderBoardSelector()}
-                        {this.renderListSelector()}
-                        {this.renderLabelSelector()}
-
-                        {
-                            (this.state.noCardsError === true) ?
-                                "There are no cards for the selected list! Try choosing another one" :
-                                ""
-                        }
+                        <div className="selection__container selection__container--animation">
+                            {this.renderBoardSelector()}
+                            {this.renderListSelector()}
+                            {this.renderLabelSelector()}
+                            {this.renderProceedButton()}
+                            {
+                                (this.state.noCardsError === true) ?
+                                    "There are no cards for the selected list! Try choosing another one" :
+                                    ""
+                            }
+                        </div>
                     </div>
                     <div className={"footer footer--animated"}>
-                        <Footer />
-                        <Header />
+                        <Header/>
+                        <Footer/>
                     </div>
                 </div>
             </div>
