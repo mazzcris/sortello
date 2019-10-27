@@ -50,8 +50,6 @@ describe('sort with multiple undo clicks', function () {
                   }
                 }
               });
-
-
             });
           });
         });
@@ -69,8 +67,9 @@ describe('sort with multiple undo clicks', function () {
         nextChoice();
       })
 
+      let results = element(by.id('update_board'));
+      browser.wait(EC.presenceOf(results), 50000).then(function () {
       protractor.expectRecap.toBe(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
-    }
-  );
-
+    })
+  });
 });

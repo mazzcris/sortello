@@ -79,7 +79,6 @@ describe('sort list asc', function () {
       nextChoice();
     })
 
-
       let showRecapButton = element(by.css('.trigger-button__link'));
       browser.wait(EC.presenceOf(showRecapButton), 20000).then(function () {
         element(by.css('.trigger-button__link')).click();

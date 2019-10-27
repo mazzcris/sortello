@@ -1,14 +1,23 @@
 exports.config = {
-  specs: [
-    'tests/protractor/specs/asc-choices-spec.js',
-    'tests/protractor/specs/desc-choices-spec.js',
-    'tests/protractor/specs/forget-spec.js',
-    'tests/protractor/specs/undo-spec.js',
-    'tests/protractor/specs/undo-forget-spec.js',
-    'tests/protractor/specs/undo-multiple-spec.js',
-    'tests/protractor/specs/recap-spec.js',
-    'tests/protractor/specs/send-to-board-spec.js'
-  ],
+suites: {
+      specs: [
+        'tests/protractor/specs/asc-choices-spec.js',
+        'tests/protractor/specs/desc-choices-spec.js',
+        'tests/protractor/specs/forget-spec.js',
+        'tests/protractor/specs/undo-spec.js',
+        'tests/protractor/specs/undo-forget-spec.js',
+        'tests/protractor/specs/undo-multiple-spec.js',
+        'tests/protractor/specs/recap-spec.js',
+        'tests/protractor/specs/send-to-board-spec.js'
+      ],
+       server: [
+         'tests/protractor/specs/dotvoting-spec.js',
+         'tests/protractor/specs/dotvoting-multiple-rooms-spec.js',
+         'tests/protractor/specs/voter-board-permissions-spec.js',
+         'tests/protractor/specs/voter-board-permissions-spec-github.js',
+         'tests/protractor/specs/dotvoting-two-rooms-spec-github.js',
+       ]
+    }
   restartBrowserBetweenTests: false,
   capabilities: {
     browserName: 'chrome',
@@ -16,14 +25,30 @@ exports.config = {
   baseUrl: 'http://localhost:4000',
   framework: 'jasmine',
   params: {
-      testTrelloUsername: '',
-      testTrelloPassword: '',
-      testTrelloExtId: ''
+       authenticationDone: '',
+          testGithubExtId : '',
+          testGithubUsername : '',
+          testGithubPassword : '',
+          testTrelloUsername: '',
+          testTrelloPassword: '',
+          testTrelloExtId: '',
+          testTrelloExtId2: '',
+          testTrello2Username: '',
+          testTrello2Password: '',
+          testTrello3Username: '',
+          testTrello3Password: '',
+          testTrello4Username: '',
+          testTrello4Password: '',
+          testTrelloPrivateBoardExtId: '',
+          hostname: ''
     },
-    onPrepare: function() {
-      browser.ignoreSynchronization = true;
-      protractor.accessFromChromeExtension = require('./tests/protractor/accessFromChromeExtension.js');
-      protractor.selectWindow = require('./tests/protractor/selectWindow.js');
-      protractor.expectRecap = require('./tests/protractor/expectRecap.js');
-    }
+    onPrepare: function () {
+        browser.ignoreSynchronization = true;
+        protractor.accessFromChromeExtension = require('./tests/protractor/accessFromChromeExtension.js');
+        //protractor.accessFromChromeExtensionGithub = require('./tests/protractor/accessFromChromeExtensionGithub.js');
+        protractor.simpleAccessFromChromeExtension = require('./tests/protractor/simpleAccessFromChromeExtension.js');
+        protractor.selectWindow = require('./tests/protractor/selectWindow.js');
+        protractor.expectRecap = require('./tests/protractor/expectRecap.js');
+        protractor.common = require('./tests/protractor/common.js');
+      }
 };

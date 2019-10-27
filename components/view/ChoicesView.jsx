@@ -107,8 +107,6 @@ class ChoicesView extends React.Component {
                         {this.props.roomLink}
                     </div>
                 </div>
-                
-                
             </div>
         )
     }

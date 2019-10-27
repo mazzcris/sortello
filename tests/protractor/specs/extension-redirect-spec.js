@@ -12,6 +12,5 @@ describe('sort list', function () {
     };
     browser.get('/?extId=' + (process.env.TEST_TRELLO_EXTID || browser.params.testTrelloExtId));
     browser.wait(urlChanged('/app.html?extId=' + (process.env.TEST_TRELLO_EXTID || browser.params.testTrelloExtId)), 5000);
-
   });
 });

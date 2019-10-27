@@ -9,6 +9,7 @@ import {remove} from "lodash"
 import Room from "../model/Room.js"
 import ChoicesView from './view/ChoicesView.jsx'
 import RoomLink from './RoomLink.jsx'
+import queryString from "query-string";
 
 function openOverlay() {
     document.getElementById('overlay__share-room').style.height = "100%";
@@ -34,20 +35,6 @@ class Choices extends React.Component {
     constructor (props) {
         super(props);
         this.engine = new Engine(clone(this.props.nodes), clone(this.props.rootNode))
-        this.handleCardClicked = this.handleCardClicked.bind(this)
-        this.cardClicked = this.cardClicked.bind(this)
-        this.handleAddToBlacklist = this.handleAddToBlacklist.bind(this)
-        this.handleUndoClicked = this.handleUndoClicked.bind(this)
-        this.startChoices = this.startChoices.bind(this)
-        this.createRoom = this.createRoom.bind(this)
-        this.removeVoter = this.removeVoter.bind(this)
-        this.addVoter = this.addVoter.bind(this)
-        this.handleGoToNextVoting = this.handleGoToNextVoting.bind(this)
-        this.registerVote = this.registerVote.bind(this)
-        this.addVoteToVoters = this.addVoteToVoters.bind(this)
-        this.getTrelloUserData(this);
-        this.getAllRoomVoters = this.getAllRoomVoters.bind(this)
-        this.castRoomVoters = this. castRoomVoters.bind(this)
         this.room = false;
         this.state = {
             leftCard: null,
@@ -60,12 +47,36 @@ class Choices extends React.Component {
         }
     }
 
+    componentDidMount(){
+        this.bindMethod();
+    }
+
+    bindMethod(){
+        this.handleCardClicked = this.handleCardClicked.bind(this)
+        this.cardClicked = this.cardClicked.bind(this)
+        this.handleAddToBlacklist = this.handleAddToBlacklist.bind(this)
+        this.handleUndoClicked = this.handleUndoClicked.bind(this)
+        this.startChoices = this.startChoices.bind(this)
+        this.createRoom = this.createRoom.bind(this)
+        this.listenSocket = this.listenSocket.bind(this)
+        this.removeVoter = this.removeVoter.bind(this)
+        this.addVoter = this.addVoter.bind(this)
+        this.handleGoToNextVoting = this.handleGoToNextVoting.bind(this)
+        this.registerVote = this.registerVote.bind(this)
+        this.addVoteToVoters = this.addVoteToVoters.bind(this)
+        this.getTrelloUserData(this)
+        this.getAllRoomVoters = this.getAllRoomVoters.bind(this)
+        this.castRoomVoters = this.castRoomVoters.bind(this)
+        this.checkEnded = this.checkEnded.bind(this)
+    }
+
     getTrelloUserData (component) {
-        component.props.Trello.members.get('me', {}, function (data) {
-            component.trelloId = data.id
-            component.trelloAvatar = '//trello-avatars.s3.amazonaws.com/' + data.avatarHash + '/50.png'
-            if (data.avatarHash === null) {
-                component.trelloAvatar = '//www.gravatar.com/avatar/' + data.gravatarHash + '?s=64&d=identicon'
+        component.props.BoardApi.getMembers('me', {}, function (data) {
+            var normalizedData = component.props.BoardApi.normalizeData(data);
+            component.sortelloId = normalizedData.id
+            component.sortelloAvatar = normalizedData.avatar
+            if (normalizedData.avatar.includes("null")) {
+                component.sortelloAvatar = '//www.gravatar.com/avatar/' + normalizedData.gravatar + '?s=64&d=identicon'
             }
         }, function (e) {
             console.log(e);
@@ -76,19 +87,22 @@ class Choices extends React.Component {
         if(this.room){
             return;
         }
-        let component = this;
         let randomKey = getRandomKey()
         this.room = new Room(socket, randomKey)
         this.room.open(randomKey)
+        this.listenSocket()
+    }
+
+    listenSocket(){
+        let component = this;
         socket.on('newRoomOpened', roomId => {
-            console.log("new room opened")
             component.setState({
                 roomId: roomId
             })
         })
 
-        socket.on('voterJoined', function (voterId, trelloAvatar) {
-            component.addVoter(voterId, trelloAvatar);
+        socket.on('voterJoined', function (voterId, sortelloAvatar) {
+            component.addVoter(voterId, sortelloAvatar);
         })
 
         socket.on('voterLeft', function (voterId) {
@@ -99,12 +113,16 @@ class Choices extends React.Component {
             component.room.castNextChoice(component.state.leftCard, component.state.rightCard)
         })
 
-        socket.on('cardClicked', function (side, trelloId, trelloAvatar) {
-            component.registerVote(side, trelloId, trelloAvatar)
+        socket.on('cardClicked', function (side, sortelloId, sortelloAvatar) {
+            component.registerVote(side, sortelloId, sortelloAvatar)
         })
 
         socket.on('getBoardIdFromMaster', function () {
-            component.room.castBoardId(component.props.boardId)
+            if(component.props.BoardApi.getName() === "Trello"){
+                component.room.castBoardId(component.props.boardId)
+            }else{
+                component.room.castBoardId(component.props.urlProject);
+            }
         })
     }
 
@@ -134,11 +152,11 @@ class Choices extends React.Component {
         }
     }
 
-    registerVote (side, trelloId, trelloAvatar) {
+    registerVote (side, sortelloId, sortelloAvatar) {
         let voter = {
-            voterId: trelloId,
-            trelloId: trelloId,
-            trelloAvatar: trelloAvatar
+            voterId: sortelloId,
+            sortelloId: sortelloId,
+            sortelloAvatar: sortelloAvatar
         }
 
         this.addVoteToVoters(side, voter)
@@ -183,12 +201,12 @@ class Choices extends React.Component {
         })
     }
 
-    addVoter (voterId, trelloAvatar) {
+    addVoter (voterId, sortelloAvatar) {
         let component = this
         if (find(component.state.roomVoters, {'id': voterId}) !== undefined) {
             return
         }
-        let voters = component.state.roomVoters.concat({id: voterId, avatar: trelloAvatar});
+        let voters = component.state.roomVoters.concat({id: voterId, avatar: sortelloAvatar});
         component.setState({
             roomVoters: voters
         }, () => {
@@ -212,6 +230,10 @@ class Choices extends React.Component {
                 component.room.castVotesInfo([], [])
             }
         })
+        component.checkEnded();
+    }
+
+    checkEnded(){
         if (this.engine.getEnded()) {
             if (this.room) {
                 this.room.castPrioritizationEnded()
@@ -233,7 +255,6 @@ class Choices extends React.Component {
             });
         }
     }
-
     handleUndoClicked () {
         this.engine.undo();
         this.getNextChoice()
@@ -264,9 +285,9 @@ class Choices extends React.Component {
         let component = this
 
         let voter = {
-            voterId: component.trelloId,
-            trelloId: component.trelloId,
-            trelloAvatar: component.trelloAvatar
+            voterId: component.sortelloId,
+            sortelloId: component.sortelloId,
+            sortelloAvatar: component.sortelloAvatar
         }
 
         component.setState({
@@ -289,7 +310,7 @@ class Choices extends React.Component {
     }
 
     renderRoomLink () {
-        return <RoomLink roomId={this.state.roomId}/>
+        return <RoomLink roomId={this.state.roomId} extId={this.props.extId} BoardApi ={this.props.BoardApi}/>
     }
 
 
@@ -300,7 +321,7 @@ class Choices extends React.Component {
                     <div onClick={() => { openOverlay() }}>
                         <a href="#" id="new-room-button" onClick={this.createRoom}>
                             <div className="share-room__button">
-                                {this.room ? 'Share room' : 'Open new room' }</div>
+                                {this.room? 'Share room' : 'Open new room' }</div>
                         </a>
                     </div>
                 </div>
@@ -317,8 +338,8 @@ class Choices extends React.Component {
         let joinedVoters = this.state.roomVoters
         if (this.room) {
             joinedVoters = joinedVoters.concat({
-                id: this.trelloId,
-                avatar: this.trelloAvatar,
+                id: this.sortelloId,
+                avatar: this.sortelloAvatar,
                 isAdmin: true
             })
         }
@@ -348,6 +369,7 @@ class Choices extends React.Component {
                 handleGoToNextVoting={this.handleGoToNextVoting}
                 progress={this.getProgress()}
                 selectedSide={this.state.selectedSide}
+                BoardApi = {this.props.BoardApi}
             />
         )
     }
